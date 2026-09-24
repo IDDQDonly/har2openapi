@@ -1,0 +1,31 @@
+<section id="changes" class="spaced">
+  <div class="section-heading"><h2>{{ _("Изменения в наблюдениях") }} <span class="count">{{ changes|length }}</span></h2></div>
+  <p class="hint">{{ _("Сравниваются выборки трафика. Отсутствие операции или поля не доказывает удаление. Для обеих выборок применены решения о маршрутах новой версии.") }}</p>
+  {% if before_count is defined %}
+  <div class="sample-summary"><div><span>{{ _("До") }}</span><strong>{{ before_count }}</strong><small>{{ _("запросов в выборке") }}</small></div><span>→</span><div><span>{{ _("После") }}</span><strong>{{ after_count }}</strong><small>{{ _("запросов в выборке") }}</small></div></div>
+  {% if before_count >= 10 and after_count < before_count / 2 %}<p class="notice sample-warning">{{ _("Новая выборка более чем вдвое меньше исходной. Ненаблюдавшиеся поля и операции могли просто не попасть в запись.") }}</p>{% endif %}
+  {% endif %}
+  {% for change in changes %}
+  <details class="change {% if reviews and change.id in reviews %}expected-change{% endif %}" id="change-{{ change.id }}">
+    <summary><span class="change-symbol {{ change.kind }}">{{ '↔' if change.kind == 'type' else '+' if change.kind == 'new' else '?' }}</span><div><span class="method {{ change.method }}">{{ change.method|upper }}</span> <code>{{ change.path }}</code><p>{{ change_message(change) }}</p>{% if reviews and change.id in reviews %}<span class="tag">{{ _("Ожидаемое изменение") }}</span>{% endif %}</div><span class="chevron">⌄</span></summary>
+    <div class="change-body">
+      <p class="hint">{{ change.origin }}</p>
+      {% if change.smaller_sample %}<p class="notice sample-warning">{{ _("У этой операции новая выборка более чем вдвое меньше. Отсутствие данных требует дополнительной проверки.") }}</p>{% endif %}
+      <div class="diff-grid">
+        {% for label, operation, sources, value in [(_("До"), change.before, change.before_sources, change['values'][0]), (_("После"), change.after, change.after_sources, change['values'][1])] %}
+        <div class="diff-side {{ 'before' if loop.first else 'after' }}">
+          <h3>{{ _(label) }}</h3><p><strong>{{ value.count }}</strong> {{ _("запросов · ответы") }} {{ value.statuses|join(', ') or '—' }}</p>
+          {% if change.field %}<div class="field-diff"><code>{{ change.field }}</code><strong class="type-value">{{ value.types or _('Не наблюдалось') }}</strong><span>{{ value.present }} / {{ value.total }} {{ _('тел с полем') }}</span></div>{% endif %}
+          {% if operation %}<details><summary>{{ _("Источники и примеры") }}</summary>{% for source in sources[:3] %}<p><strong>{{ source.file }}</strong> {{ _("· запись №") }}{{ source.index }} · <code>{{ source.path }}</code></p><pre>{{ source.example|tojson(indent=2) }}</pre>{% else %}<p class="muted">{{ _("Подтверждающих записей нет.") }}</p>{% endfor %}{% if sources|length > 3 %}<p class="hint">{{ _("Показаны первые 3 источника. Полный список доступен в результате версии.") }}</p>{% endif %}</details>{% else %}<p class="muted">{{ _("Не наблюдалось в этой выборке.") }}</p>{% endif %}
+        </div>{% endfor %}
+      </div>
+      {% if reviews and change.id in reviews and reviews[change.id] %}<p class="review-note"><strong>{{ _('Комментарий к ожидаемому изменению') }}</strong>: {{ reviews[change.id] }}</p>{% endif %}
+      {% if left and right and not standalone %}
+      <form class="review-form" method="post" action="{{ url_for('review_change', identifier=project.id) }}">
+        <input type="hidden" name="return_to" value="{{ 'version' if record is defined else 'compare' }}"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="before" value="{{ left.id }}"><input type="hidden" name="after" value="{{ right.id }}"><input type="hidden" name="change_id" value="{{ change.id }}">
+        {% if change.id in reviews %}<p><strong>{{ _("Ожидаемое изменение") }}</strong></p><button class="secondary small" name="expected" value="0">{{ _("Вернуть на проверку") }}</button>{% else %}<label for="note-{{ change.id }}">{{ _("Комментарий к ожидаемому изменению") }}</label><div class="inline-form"><input id="note-{{ change.id }}" name="note" maxlength="500" placeholder="{{ _('Например, согласовано в релизе 1.5') }}"><button class="secondary" name="expected" value="1">{{ _("Отметить как ожидаемое") }}</button></div>{% endif %}
+      </form>{% endif %}
+    </div>
+  </details>
+  {% else %}<div class="notice success">{{ _("Различий в операциях, статусах ответов и наблюдаемых типах полей не найдено.") }}</div>{% endfor %}
+</section>

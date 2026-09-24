@@ -1,0 +1,22 @@
+<section class="operations"><div class="section-heading"><h2>{{ _("Операции API") }} <span class="count">{{ report.operations|length }}</span></h2><span class="muted">{{ _("Наблюдения, а не полный контракт API") }}</span></div>
+{% for operation in report.operations %}<details class="operation" id="op-{{ operation.id }}"><summary><span class="method {{ operation.method }}">{{ operation.method|upper }}</span><code class="route-path">{{ operation.path }}</code><span class="operation-count">{{ operation.count }} {{ _("запросов") }}</span><span class="chevron">⌄</span></summary><div class="operation-body"><div class="operation-meta"><span>{{ operation.origin }}</span><span>{{ _("Ответы:") }} {% for status in operation.statuses %}<b class="tag">{{ status }}</b> {% endfor %}</span></div>
+{% if operation.fields %}
+<h3>{{ _("Поля тела") }}</h3>
+{% for group in operation.field_groups %}
+<section class="body-fields">
+<h4>{% if group.request %}{{ _("Тело запроса") }}{% else %}{{ _("Ответ") }} {{ group.status }}{% endif %} <span class="tag">{{ group.mime }}</span></h4>
+<p class="hint">{{ _("Проанализировано тел: {total}", total=group.total) }}. {{ _("Наличие поля в примерах не означает, что оно обязательное.") }}</p>
+{% if group.has_arrays %}<p class="hint">{{ _("[] обозначает элемент массива. Для такого поля считаем тела, где оно есть хотя бы в одном элементе. Например: email есть у 1 из 100 пользователей в одном ответе → 1 из 1 ответов, а не у всех пользователей.") }}</p>{% endif %}
+<div class="table-scroll"><table><thead><tr><th>{{ _("Поле") }}</th><th>{{ _("Наблюдаемые типы") }}</th><th>{% if group.request %}{{ _("Запросов с полем") }}{% else %}{{ _("Ответов с полем") }}{% endif %}</th><th>{{ _("Примеры") }}</th></tr></thead><tbody>
+{% for field in group.fields %}<tr>
+<td><code>{{ field.label or _("Тело целиком") }}</code></td>
+<td>{% for type in field.types %}<span class="tag">{{ type }}</span> {% endfor %}</td>
+<td>{{ field.count }} {{ _("из") }} {{ field.total }}{% if field.in_array %}<small>{{ _("хотя бы в одном элементе") }}</small>{% endif %}</td>
+<td>{% if not standalone %}<a href="{{ url_for('evidence', kind='drafts' if draft else 'versions', identifier=record.id, operation=operation.id, context=field.context, field=field.name) }}">{{ _("Показать ↗") }}</a>{% else %}{{ _("См. evidence.json") }}{% endif %}</td>
+</tr>{% endfor %}
+</tbody></table></div>
+</section>
+{% endfor %}
+{% else %}<p class="hint">{{ _("В этой выборке нет доступных примеров тел.") }}</p>{% endif %}
+
+<div class="operation-actions">{% if not standalone %}<a class="button secondary small" href="{{ url_for('evidence', kind='drafts' if draft else 'versions', identifier=record.id, operation=operation.id) }}">{{ _("Запросы-источники ↗") }}</a>{% endif %}<details><summary>{{ _("Посмотреть схему операции") }}</summary><pre>{{ operation.schema|tojson(indent=2) }}</pre></details></div></div></details>{% else %}<div class="empty-state"><h3>{{ _("Нет запросов в выбранной области") }}</h3><p>{{ _("Проверьте домены или посмотрите сравнение с исходной версией.") }}</p></div>{% endfor %}</section>

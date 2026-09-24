@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}{{ _("Обработка записей") }}{% endblock %}
+{% block content %}
+<a class="back-link" href="{{ url_for('project_page', identifier=project.id) }}">← {{ project.name }}</a>
+<section class="panel narrow job-panel" data-job-status="{{ url_for('job_status', identifier=job.id) }}">
+  <div class="eyebrow">{{ _("ФОНОВАЯ ОБРАБОТКА") }}</div><h1>{{ _("Готовим результат") }}</h1>
+  <p class="lead" id="job-state">{{ _(job.state) }}</p>
+  <progress id="job-progress" value="{{ job.progress }}" max="100">{{ job.progress }}%</progress><p><span id="job-percent">{{ job.progress }}</span>% <span id="job-file">{{ job.filename }}</span></p>
+  <p class="notice" id="job-error" {% if not job.error %}hidden{% endif %}>{{ error_message(job.error) }}</p>
+  <p class="hint">{{ _("Можно перейти к другим проектам. Обработка продолжится, пока приложение запущено.") }}</p>
+  <a id="job-result" class="button" href="{{ url_for('project_page', identifier=project.id) }}">{{ _("К проекту") }}</a>
+  <noscript><p>{{ _("Обновите страницу, чтобы увидеть результат.") }}</p></noscript>
+</section>
+<script src="{{ url_for('static', filename='jobs.js') }}" defer></script>
+{% endblock %}

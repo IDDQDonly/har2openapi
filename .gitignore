@@ -1,0 +1,16 @@
+.DS_Store
+.idea/
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
+
+# Local captures and generated specifications
+*.har
+!examples/*.har
+openapi_*.yaml
+.har2openapi/

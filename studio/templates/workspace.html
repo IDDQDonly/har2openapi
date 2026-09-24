@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}{{ _("Резервные копии") }}{% endblock %}
+{% block content %}
+<div class="eyebrow">{{ _("РАБОЧЕЕ ПРОСТРАНСТВО") }}</div><h1>{{ _("Резервные копии") }}</h1>
+<p class="lead">{{ _("Сохраните проекты, версии, черновики и отметки ожидаемых изменений.") }}</p>
+<div class="two-columns spaced">
+  <section class="panel"><h2>{{ _("Скачать копию") }}</h2><p>{{ _("Копия включает активные и архивные проекты. Исходные HAR и временные результаты анализа в неё не входят.") }}</p><a class="button" href="{{ url_for('backup') }}">{{ _("Скачать резервную копию") }}</a></section>
+  <form class="panel" method="post" enctype="multipart/form-data">
+    <input type="hidden" name="csrf" value="{{ csrf }}"><h2>{{ _("Восстановить копию") }}</h2>
+    <p>{{ _("Проекты будут добавлены как отдельные копии. Текущие данные останутся без изменений.") }}</p>
+    <label for="backup-file">{{ _("Файл резервной копии") }}</label><input id="backup-file" type="file" name="backup" accept=".gz" required>
+    <p class="hint">{{ _("До 50 МБ в архиве и 200 МБ после распаковки.") }}</p>
+    <label class="choice"><input type="checkbox" name="confirm" value="yes" required><span>{{ _("Добавить проекты из копии в рабочее пространство") }}</span></label>
+    <button>{{ _("Восстановить") }}</button>
+  </form>
+</div>
+{% endblock %}
